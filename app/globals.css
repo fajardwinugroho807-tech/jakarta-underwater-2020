@@ -24,3 +24,78 @@ body {
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
 }
+
+@keyframes cinematicReveal {
+  0% {
+    opacity: 0;
+    transform: scale(1.08);
+    filter: brightness(0.65);
+  }
+
+  100% {
+    opacity: 1;
+    transform: scale(1);
+    filter: brightness(1);
+  }
+}
+
+@keyframes cinematicSlideIn {
+  from {
+    opacity: 0.5;
+    transform: translateX(12%) scale(1.05);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateX(0) scale(1);
+  }
+}
+
+@keyframes cinematicSlideOut {
+  from {
+    opacity: 1;
+    transform: translateX(0) scale(1);
+  }
+
+  to {
+    opacity: 0;
+    transform: translateX(-12%) scale(1.05);
+  }
+}
+
+
+@keyframes cinematicSlideInLeft {
+  from {
+    opacity: 0.5;
+    transform: translateX(-12%) scale(1.05);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateX(0) scale(1);
+  }
+}
+
+@keyframes cinematicSlideOutRight {
+  from {
+    opacity: 1;
+    transform: translateX(0) scale(1);
+  }
+
+  to {
+    opacity: 0;
+    transform: translateX(12%) scale(1.05);
+  }
+}
+
+@keyframes cinematicCaption {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
