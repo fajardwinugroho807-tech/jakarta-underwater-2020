@@ -10,9 +10,10 @@ import DocumentarySidebar from "./components/DocumentarySidebar";
 import FloodTimeline from "./components/FloodTimeline";
 import DisasterSection from "./components/DisasterSection";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
+import { supabase } from "../lib/supabase";
 import Link from "next/link";
-import { ArrowDown, ArrowUpRight, Waves, LogIn, UserPlus } from "lucide-react";
+import { ArrowDown, ArrowUpRight, Waves, LogIn, UserPlus, LayoutDashboard, LogOut } from "lucide-react";
 import gsap from "gsap";
 
 const chapters = [
@@ -44,6 +45,34 @@ const chapters = [
 
 export default function Home() {
   const containerRef = useRef<HTMLDivElement>(null);
+  const [isLoggedIn, setIsLoggedIn] = useState<boolean | null>(null);
+
+  useEffect(() => {
+    let active = true;
+    supabase.auth.getSession().then(({ data }) => {
+      if (active) setIsLoggedIn(Boolean(data.session));
+    }).catch(() => {
+      if (active) setIsLoggedIn(false);
+    });
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (active) setIsLoggedIn(Boolean(session));
+    });
+
+    return () => {
+      active = false;
+      subscription.unsubscribe();
+    };
+  }, []);
+
+  async function handleLogout() {
+    const { error } = await supabase.auth.signOut();
+    if (error) {
+      alert("Gagal logout: " + error.message);
+      return;
+    }
+    setIsLoggedIn(false);
+  }
 
   useEffect(() => {
     const context = gsap.context(() => {
@@ -106,23 +135,44 @@ export default function Home() {
             </a>
           </div>
 
-          {/* LOGIN DAN REGISTER: DESKTOP + MOBILE */}
+          {/* AKUN: DESKTOP + MOBILE */}
           <div className="flex items-center gap-2 sm:gap-3">
-            <Link
-              href="/login"
-              className="inline-flex items-center gap-2 border border-[#a8d9e8]/60 bg-[#080e14]/60 px-3 py-2.5 text-[10px] font-bold uppercase tracking-wider text-[#d5edf4] backdrop-blur-sm transition hover:bg-[#a8d9e8] hover:text-[#080e14] sm:px-4 sm:text-xs"
-            >
-              <LogIn size={15} />
-              Login
-            </Link>
-            <Link
-              href="/register"
-              className="hidden items-center gap-2 bg-[#a8d9e8] px-4 py-2.5 text-xs font-bold uppercase tracking-wider text-[#080e14] transition hover:bg-white sm:inline-flex"
-            >
-              <UserPlus size={15} />
-              Register
-            </Link>
-            {/* Menu mobile lama tetap tersedia */}
+            {isLoggedIn === true ? (
+              <>
+                <Link
+                  href="/dashboard"
+                  className="inline-flex items-center gap-2 border border-[#a8d9e8]/60 bg-[#080e14]/60 px-3 py-2.5 text-[10px] font-bold uppercase tracking-wider text-[#d5edf4] backdrop-blur-sm transition hover:bg-[#a8d9e8] hover:text-[#080e14] sm:px-4 sm:text-xs"
+                >
+                  <LayoutDashboard size={15} />
+                  Dashboard
+                </Link>
+                <button
+                  type="button"
+                  onClick={handleLogout}
+                  className="hidden items-center gap-2 bg-[#a8d9e8] px-4 py-2.5 text-xs font-bold uppercase tracking-wider text-[#080e14] transition hover:bg-white sm:inline-flex"
+                >
+                  <LogOut size={15} />
+                  Logout
+                </button>
+              </>
+            ) : isLoggedIn === false ? (
+              <>
+                <Link
+                  href="/login"
+                  className="inline-flex items-center gap-2 border border-[#a8d9e8]/60 bg-[#080e14]/60 px-3 py-2.5 text-[10px] font-bold uppercase tracking-wider text-[#d5edf4] backdrop-blur-sm transition hover:bg-[#a8d9e8] hover:text-[#080e14] sm:px-4 sm:text-xs"
+                >
+                  <LogIn size={15} />
+                  Login
+                </Link>
+                <Link
+                  href="/register"
+                  className="hidden items-center gap-2 bg-[#a8d9e8] px-4 py-2.5 text-xs font-bold uppercase tracking-wider text-[#080e14] transition hover:bg-white sm:inline-flex"
+                >
+                  <UserPlus size={15} />
+                  Register
+                </Link>
+              </>
+            ) : null}
             <MobileNavigation />
           </div>
         </nav>
