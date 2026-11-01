@@ -188,7 +188,7 @@ export default function Home() {
             className="absolute inset-0 bg-cover bg-center"
             style={{
               backgroundImage:
-                "url('https://images.unsplash.com/photo-1547683905-f686c993aae5?auto=format&fit=crop&w=2000&q=85')",
+                "url('https://cdn1-production-images-kly.akamaized.net/hg2ocFIa2M_zoVWNHSe2vR3gexM=/1280x720/smart/filters:quality(75):strip_icc():format(webp)/kly-media-production/medias/3010435/original/073324100_1577866350-20200101-Ciliwung-Meluap_-Banjir-Rendam-Kawasan-Rawajati-4.jpg')",
             }}
           />
 
