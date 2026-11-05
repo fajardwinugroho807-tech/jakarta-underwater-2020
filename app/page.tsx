@@ -3,12 +3,7 @@
 import CinematicLoader from "./components/CinematicLoader";
 import ScrollProgress from "./components/ScrollProgress";
 import MobileNavigation from "./components/MobileNavigation";
-import FloodDashboard from "./components/FloodDashboard";
-import FloodMap from "./components/FloodMap";
-import CinematicPhotoSlider from "./components/CinematicPhotoSlider";
 import DocumentarySidebar from "./components/DocumentarySidebar";
-import FloodTimeline from "./components/FloodTimeline";
-import DisasterSection from "./components/DisasterSection";
 
 import { useEffect, useRef, useState } from "react";
 import { supabase } from "../lib/supabase";
@@ -23,7 +18,7 @@ const chapters = [
     title: "Malam yang mengubah Jakarta.",
     description:
       "Menelusuri hujan ekstrem dan banjir pada pergantian tahun 2019 menuju 2020.",
-    href: "#cerita",
+    href: "/materi/kronologi",
   },
   {
     number: "02",
@@ -31,7 +26,7 @@ const chapters = [
     title: "Di balik angka, ada manusia.",
     description:
       "Eksplorasi data historis, dampak banjir, dan visualisasi statistik.",
-    href: "#flood-dashboard",
+    href: "/eksplorasi/dashboard",
   },
   {
     number: "03",
@@ -39,7 +34,7 @@ const chapters = [
     title: "Satu kota. Banyak cerita.",
     description:
       "Menjelajahi persebaran wilayah terdampak melalui peta interaktif.",
-    href: "#peta",
+    href: "/eksplorasi/peta",
   },
 ];
 
@@ -114,21 +109,21 @@ export default function Home() {
           {/* NAVIGASI DESKTOP */}
           <div className="hidden items-center gap-10 text-xs font-semibold uppercase tracking-[0.2em] md:flex">
             <a
-              href="#cerita"
+              href="/materi/kronologi"
               className="transition hover:text-[#a8d9e8]"
             >
               The Story
             </a>
 
             <a
-              href="#flood-dashboard"
+              href="/eksplorasi/dashboard"
               className="transition hover:text-[#a8d9e8]"
             >
               Explore Data
             </a>
 
             <a
-              href="#peta"
+              href="/eksplorasi/peta"
               className="transition hover:text-[#a8d9e8]"
             >
               The Map
@@ -276,11 +271,15 @@ export default function Home() {
           </div>
         </section>
 
-        {/* 12 CHAPTERS */}
-        <DisasterSection />
-
-        {/* CINEMATIC PHOTO GALLERY */}
-        <CinematicPhotoSlider />
+        {/* Materi lengkap kini berada di halaman sidebar */}
+        <section className="mx-auto max-w-[1600px] px-5 pb-16 md:px-12">
+          <p className="max-w-3xl text-base leading-8 text-slate-300">
+            Banjir adalah peristiwa tergenangnya daratan oleh air yang melampaui kapasitas
+            aliran atau drainase. Pada pergantian tahun 2019–2020, hujan ekstrem
+            menyebabkan genangan di berbagai wilayah Jakarta dan sekitarnya.
+            Jelajahi kronologi, penyebab, dampak, peta, dan simulasi melalui menu sidebar.
+          </p>
+        </section>
 
         {/* EXPLORE SECTION */}
         <section
@@ -308,7 +307,7 @@ export default function Home() {
             {/* CHAPTER CARDS */}
             <div className="grid gap-4 lg:grid-cols-3">
               {chapters.map((chapter) => (
-                <a
+                <Link
                   key={chapter.number}
                   href={chapter.href}
                   className="group flex min-h-[300px] flex-col justify-between bg-[#f4f5f0] p-7 transition duration-500 hover:-translate-y-2 hover:bg-[#c4dce2] sm:min-h-[350px] sm:p-8 md:min-h-[390px] md:p-10"
@@ -337,22 +336,18 @@ export default function Home() {
                       {chapter.description}
                     </p>
                   </div>
-                </a>
+                </Link>
               ))}
             </div>
           </div>
         </section>
 
-        {/* TIMELINE */}
-        <FloodTimeline />
-
-        {/* STATISTICS DASHBOARD */}
-        <FloodDashboard />
-
-        {/* INTERACTIVE MAP */}
-        <div id="peta">
-          <FloodMap />
-        </div>
+        <section className="mx-auto max-w-[1600px] px-5 py-16 md:px-12">
+          <h2 className="text-3xl font-black uppercase">Jelajahi simulasi interaktif</h2>
+          <p className="mt-4 max-w-2xl text-slate-400">Lihat air bergerak di peta ilustratif,
+            simulasi kota 3D bergaya isometrik, dan perubahan skenario melalui timeline.</p>
+          <Link href="/eksplorasi/simulasi" className="mt-7 inline-block bg-[#a8d9e8] px-6 py-4 font-bold text-[#080e14]">Buka Simulasi →</Link>
+        </section>
       </main>
 
       {/* FOOTER */}

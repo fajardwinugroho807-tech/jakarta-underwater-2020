@@ -1,0 +1,4 @@
+import ArchiveLayout from "../../components/ArchiveLayout";
+export default function Page() {
+  return <ArchiveLayout><article className="mx-auto max-w-4xl"><h1 className="text-4xl font-black">Sumber Referensi</h1><p className="mt-6 leading-8 text-slate-300">Untuk menelusuri dan memverifikasi arsip banjir Jakarta 2020, gunakan sumber resmi berikut. Tautan ini adalah portal umum, bukan sitasi spesifik untuk setiap angka di website.</p><ul className="mt-8 space-y-4 text-[#a8d9e8]"><li><a href="https://www.bmkg.go.id/" target="_blank" rel="noopener noreferrer">BMKG — informasi cuaca dan iklim</a></li><li><a href="https://bnpb.go.id/" target="_blank" rel="noopener noreferrer">BNPB — informasi kebencanaan</a></li><li><a href="https://bpbd.jakarta.go.id/" target="_blank" rel="noopener noreferrer">BPBD DKI Jakarta — informasi kebencanaan daerah</a></li></ul></article></ArchiveLayout>;
+}

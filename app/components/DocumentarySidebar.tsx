@@ -1,15 +1,15 @@
-
 "use client";
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import {
   Menu,
   X,
   Waves,
   House,
   CloudRain,
+  ShieldCheck,
   ChartColumn,
   Clock3,
   Images,
@@ -24,23 +24,26 @@ import {
 import { supabase } from "../../lib/supabase";
 
 const navigation = [
-  { id: "home", label: "Beranda", icon: House },
-  { id: "disaster", label: "Penyebab Banjir", icon: CloudRain },
-  { id: "rainfall-data", label: "Data & Statistik", icon: ChartColumn },
-  { id: "flood-chronology", label: "Kronologi", icon: Clock3 },
-  { id: "cinematic-gallery", label: "Dokumentasi Foto", icon: Images },
-  { id: "flood-chapters", label: "12 Bab Pembahasan", icon: BookOpen },
-  { id: "peta", label: "Peta Banjir", icon: Map },
-  { id: "flood-sources", label: "Sumber Referensi", icon: FileText },
+  { id: "home", label: "Beranda", icon: House, href: "/" },
+  { id: "disaster", label: "Penyebab Banjir", icon: CloudRain, href: "/materi/penyebab" },
+  { id: "rainfall-data", label: "Data & Statistik", icon: ChartColumn, href: "/eksplorasi/dashboard" },
+  { id: "flood-chronology", label: "Kronologi", icon: Clock3, href: "/materi/kronologi" },
+  { id: "flood-impact", label: "Dampak Banjir", icon: Waves, href: "/materi/dampak" },
+  { id: "mitigasi", label: "Mitigasi Banjir", icon: ShieldCheck, href: "/materi/mitigasi" },
+  { id: "cinematic-gallery", label: "Dokumentasi Foto", icon: Images, href: "/eksplorasi/galeri" },
+  { id: "flood-chapters", label: "12 Bab Pembahasan", icon: BookOpen, href: "/materi/bab" },
+  { id: "peta", label: "Peta Banjir", icon: Map, href: "/eksplorasi/peta" },
+  { id: "simulation", label: "Simulasi Banjir & 3D", icon: CloudRain, href: "/eksplorasi/simulasi" },
+  { id: "flood-sources", label: "Sumber Referensi", icon: FileText, href: "/materi/referensi" },
 ];
 
 type AccountRole = "admin" | "user" | null;
 
 export default function DocumentarySidebar() {
   const router = useRouter();
+  const pathname = usePathname();
 
   const [open, setOpen] = useState(false);
-  const [active, setActive] = useState("home");
   const [role, setRole] = useState<AccountRole>(null);
   const [authLoading, setAuthLoading] = useState(true);
   const [loggingOut, setLoggingOut] = useState(false);
@@ -117,21 +120,12 @@ export default function DocumentarySidebar() {
       window.removeEventListener("keydown", handleEscape);
   }, []);
 
-  // NAVIGASI MENU ASLI
+  // Navigasi ke halaman materi dan eksplorasi yang baru.
   function navigate(id: string) {
-    const target = document.getElementById(id);
-
-    if (target) {
-      target.scrollIntoView({
-        behavior: "smooth",
-        block: "start",
-      });
-      setActive(id);
-    } else {
-      console.warn(`Bagian #${id} belum tersedia.`);
-    }
-
+    const item = navigation.find((entry) => entry.id === id);
+    if (!item) return;
     setOpen(false);
+    router.push(item.href);
   }
 
   // LOGOUT
@@ -226,7 +220,7 @@ export default function DocumentarySidebar() {
             {/* SEMUA MENU ASLI */}
             {navigation.map((item, index) => {
               const Icon = item.icon;
-              const selected = active === item.id;
+              const selected = pathname === item.href;
 
               return (
                 <button
@@ -276,7 +270,7 @@ export default function DocumentarySidebar() {
                   className="flex w-full items-center gap-4 rounded-lg bg-[#214455] px-4 py-4 text-left text-[#c1e6ed] transition hover:bg-[#2b566b]"
                 >
                   <span className="w-6 text-xs text-[#9dcbd5]">
-                    09
+                    {String(navigation.length + 1).padStart(2, "0")}
                   </span>
 
                   <LayoutDashboard
@@ -304,7 +298,7 @@ export default function DocumentarySidebar() {
                   className="flex w-full items-center gap-4 rounded-lg px-4 py-4 text-left text-[#a3b6c0] transition hover:bg-red-500/10 hover:text-red-300 disabled:opacity-50"
                 >
                   <span className="w-6 text-xs text-[#6f8d9d]">
-                    10
+                    {String(navigation.length + 2).padStart(2, "0")}
                   </span>
 
                   <LogOut size={20} />
@@ -322,7 +316,7 @@ export default function DocumentarySidebar() {
                 className="flex w-full items-center gap-4 rounded-lg px-4 py-4 text-left text-[#a3b6c0] transition hover:bg-white/10 hover:text-white"
               >
                 <span className="w-6 text-xs text-[#6f8d9d]">
-                  09
+                  {String(navigation.length + 1).padStart(2, "0")}
                 </span>
 
                 <LogIn size={20} />

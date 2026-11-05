@@ -1,0 +1,311 @@
+<!doctype html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="color-scheme" content="dark" />
+  <title>Peta Banjir Jakarta 2020 — Data Historis</title>
+  <style>
+    :root { font-family: Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif; color: #e5f4fa; background: #0a1924; }
+    *, *::before, *::after { box-sizing: border-box; }
+    html, body { width: 100%; height: 100%; margin: 0; padding: 0; overflow: hidden; }
+    .shell { width: 100%; height: 100%; min-width: 0; min-height: 0; display: grid; grid-template-columns: minmax(260px, 320px) minmax(0, 1fr); overflow: hidden; }
+    .panel { min-width: 0; min-height: 0; height: 100%; overflow-x: hidden; overflow-y: auto; scrollbar-width: thin; scrollbar-color: #466678 #0c1c27; background: #0c1c27; border-right: 1px solid #264859; display: flex; flex-direction: column; }
+    .panel-head { padding: 18px 19px 14px; border-bottom: 1px solid #2a4756; }
+    .eyebrow { color: #80c5d7; font-size: 10px; font-weight: 800; letter-spacing: .15em; text-transform: uppercase; }
+    h1 { font-size: clamp(19px, 2vw, 23px); letter-spacing: -.04em; line-height: 1.15; margin: 10px 0; }
+    .intro { font-size: 12px; color: #adc3cf; line-height: 1.6; margin: 0; }
+    .controls { padding: 13px 18px; border-bottom: 1px solid #284554; }
+    .group-title { font-size: 11px; letter-spacing: .12em; color: #a9c6d4; text-transform: uppercase; font-weight: 800; margin-bottom: 9px; }
+    .filter { width: 100%; border: 1px solid #294756; border-radius: 7px; background: #122e3c; color: #e3f1f8; text-align: left; padding: 9px 10px; margin: 3px 0; cursor: pointer; display: flex; align-items: center; gap: 8px; font-size: 12px; }
+    .filter:hover, .filter.active { border-color: #98d8e9; background: #214454; }
+    .filter .count { margin-left: auto; color: #91aebb; font-variant-numeric: tabular-nums; }
+    .dot { width: 12px; height: 12px; flex: none; border-radius: 50%; box-shadow: 0 0 0 2px #ffffff20; }
+    .toggle { font-size: 12px; line-height: 1.5; display: flex; align-items: flex-start; gap: 9px; color: #c7dce4; cursor: pointer; }
+    .toggle input { accent-color: #7bc9eb; width: 15px; height: 15px; margin-top: 2px; }
+    .status { font-size: 11px; color: #9fbdc8; margin-top: 9px; line-height: 1.55; }
+    .status.bad { color: #ffc793; }
+    .details { padding: 16px 18px 20px; }
+    .card { padding: 13px; background: #112c3b; border: 1px solid #31556a; border-radius: 8px; }
+    .card h2 { font-size: 18px; line-height: 1.3; margin: 0 0 10px; }
+    .metric { font-size: 25px; font-weight: 900; letter-spacing: -.04em; margin: 4px 0 8px; }
+    .sub { color: #b5cbd5; font-size: 12px; line-height: 1.6; }
+    .small { font-size: 11px; color: #98bac7; line-height: 1.6; }
+    a { color: #9ee5fa; overflow-wrap: anywhere; } a:hover { color: #fff; }
+    .map-wrap { position: relative; width: 100%; height: 100%; min-width: 0; min-height: 0; overflow: hidden; }
+    #map { position: absolute; inset: 0; width: 100%; height: 100%; min-width: 0; min-height: 0; background: #0e283c; overflow: hidden; }
+    .map-badge { position: absolute; z-index: 500; top: 14px; right: 14px; padding: 10px 12px; background: #0e2029ed; border: 1px solid #3b6171; border-radius: 6px; color: #d3eaf2; max-width: min(250px, 60%); font-size: 11px; line-height: 1.5; pointer-events: none; }
+    .map-badge strong { color: #82e0ea; }
+    .leaflet-popup-content-wrapper, .leaflet-popup-tip { background: #112a37; color: #e0f4fa; }
+    .leaflet-control-attribution { font-size: 9px !important; }
+    @media (max-width: 800px) {
+      .shell { grid-template-columns: minmax(0, 1fr); grid-template-rows: minmax(195px, 38%) minmax(0, 62%); }
+      .panel { grid-row: 1; height: 100%; border-right: 0; border-bottom: 1px solid #284554; }
+      .map-wrap { grid-row: 2; height: 100%; }
+      .map-badge { top: 9px; right: 9px; max-width: min(200px, 58%); font-size: 10px; padding: 8px; }
+      .panel-head { padding: 13px 15px; } .controls { padding: 12px 15px; } .details { padding: 12px 15px; }
+    }
+  
+  /* Tile grid mandiri: setiap ubin selalu diposisikan pada koordinat Web Mercator. */
+  #map { overflow: hidden; touch-action: none; cursor: grab; user-select: none; }
+  #map.dragging { cursor: grabbing; }
+  #tiles, #flood-footprint, #markers { position: absolute; inset: 0; overflow: hidden; }
+  #tiles { z-index: 1; pointer-events: none; }
+  #tiles img { position: absolute; display: block; width: 256px !important; height: 256px !important; max-width: none !important; max-height: none !important; object-fit: fill; border: 0; padding: 0; margin: 0; }
+  #flood-footprint { z-index: 2; pointer-events: none; }
+  #flood-footprint img { position: absolute; display: block; max-width: none; opacity: .53; pointer-events: none; }
+  #markers { z-index: 3; pointer-events: none; }
+  .map-pin { position: absolute; width: 21px; height: 21px; border-radius: 50%; border: 3px solid #09212e; box-shadow: 0 2px 9px #071722c9, 0 0 0 2px #fff8; cursor: pointer; pointer-events: auto; transform: translate(-50%, -50%); }
+  .map-pin:hover, .map-pin:focus-visible { width: 26px; height: 26px; z-index: 2; outline: 2px solid white; }
+  .reset-jakarta { position: absolute; z-index: 7; bottom: 24px; left: 14px; cursor: pointer; border: 1px solid #9dddeb; border-radius: 8px; background: #103243; color: #e9faff; font-size: 12px; font-weight: 800; padding: 10px 13px; box-shadow: 0 5px 18px rgba(0,0,0,.45); }
+  .reset-jakarta:hover { background: #1d5067; }
+  .map-zoom { position: absolute; z-index: 7; top: 14px; left: 14px; display: grid; gap: 4px; }
+  .map-zoom button { width: 36px; height: 36px; border: 1px solid #aacedd; border-radius: 6px; background: #123446; color: white; font-size: 23px; font-weight: 800; cursor: pointer; }
+  .map-zoom button:hover { background: #25617a; }
+  .map-loading { position: absolute; z-index: 5; left: 14px; bottom: 72px; background: #102e3fe8; border: 1px solid #3b6171; border-radius: 6px; color: #fce4c3; padding: 8px 12px; max-width: 270px; font-size: 11px; display: none; }
+  </style>
+</head>
+<body>
+<div class="shell">
+  <aside class="panel" aria-label="Filter data peta banjir">
+    <div class="panel-head">
+      <span class="eyebrow">ARSIP BANJIR • BUKAN REAL-TIME</span>
+      <h1>Tinggi genangan<br />Jakarta 2020</h1>
+      <p class="intro">Pilih level warna, lalu klik titik untuk melihat lokasi, ketinggian air, tanggal dan sumber laporan.</p>
+    </div>
+    <div class="controls">
+      <div class="group-title">Filter level genangan</div>
+      <div id="filters" aria-label="Filter kedalaman banjir"></div>
+      <p class="small">Pengelompokan warna mengikuti rentang legenda peta BPBD 2020. Untuk laporan rentang, filter mengikuti <b>nilai maksimum</b>; angka aslinya tetap ditampilkan.</p>
+    </div>
+    <div class="controls">
+      <label class="toggle"><input type="checkbox" checked id="toggleFootprint" /> <span><b>Tampilkan area genangan BNPB</b><br />Periode 1–3 Januari 2020, tanpa rincian cm per poligon</span></label>
+      <p id="layerStatus" class="status" aria-live="polite">Memuat layer BNPB…</p>
+    </div>
+    <div class="details">
+      <div class="group-title">Detail wilayah</div>
+      <div id="detail" class="card"><h2>Ketuk titik berwarna</h2><p class="sub">Tampilkan laporan asli beserta rentang ketinggian dan tautan sumbernya.</p></div>
+    </div>
+  </aside>
+  <div class="map-wrap">
+    <div id="map" aria-label="Peta interaktif Jakarta dengan titik tinggi genangan historis">
+      <div id="tiles" aria-hidden="true"></div>
+      <div id="flood-footprint" aria-hidden="true"></div>
+      <div id="markers"></div>
+    </div>
+    <div class="map-zoom"><button id="zoomIn" type="button" aria-label="Perbesar peta">+</button><button id="zoomOut" type="button" aria-label="Perkecil peta">−</button></div>
+    <div id="map-loading" class="map-loading" role="status"></div>
+    <button id="resetJakarta" class="reset-jakarta" type="button" aria-label="Kembalikan tampilan peta ke Jakarta">⌖ Kembali ke Jakarta</button>
+    <div class="map-badge"><strong>● Banjir Januari 2020</strong><br/>Bidang biru: jejak genangan BNPB. Titik warna: tinggi air yang pernah dilaporkan. Bukan peta kedalaman kontinu.</div>
+  </div>
+</div>
+<script>
+(() => {
+  "use strict";
+  const ant = 'https://www.antaranews.com/interaktif/banjir/index.html';
+  const bnpb = 'https://www.bnpb.go.id/berita/jabodetabek-dikepung-banjir-di-awal-tahun-baru-2020';
+  // Tinggi air berasal dari laporan media resmi; koordinat berikut adalah
+  // titik REFERENSI PUSAT KAWASAN (perkiraan), bukan titik pengukuran GPS.
+  // Beberapa waktu pengamatan berbeda pada tanggal 1 Januari 2020.
+  const points = [
+    {name:'Cipinang Melayu',area:'Jakarta Timur',lat:-6.256,lng:106.907,min:200,max:200,when:'1 Jan 2020, data sampai 14.00 WIB',src:'ANTARA',url:ant},
+    {name:'Halim Perdanakusuma',area:'Jakarta Timur',lat:-6.268,lng:106.890,min:200,max:200,when:'1 Jan 2020, data sampai 14.00 WIB',src:'ANTARA',url:ant},
+    {name:'Pondok Pinang',area:'Jakarta Selatan',lat:-6.266,lng:106.783,min:150,max:150,when:'1 Jan 2020, data sampai 14.00 WIB',src:'ANTARA',url:ant},
+    {name:'Makasar',area:'Jakarta Timur',lat:-6.285,lng:106.887,min:100,max:120,when:'1 Jan 2020, data sampai 14.00 WIB',src:'ANTARA',url:ant},
+    {name:'Semanan',area:'Jakarta Barat',lat:-6.164,lng:106.704,min:100,max:100,when:'1 Jan 2020, data sampai 14.00 WIB',src:'ANTARA',url:ant},
+    {name:'Pondok Kelapa',area:'Jakarta Timur',lat:-6.243,lng:106.943,min:100,max:100,when:'1 Jan 2020, data sampai 14.00 WIB',src:'ANTARA',url:ant},
+    {name:'Tebet Barat',area:'Jakarta Selatan',lat:-6.234,lng:106.848,min:100,max:100,when:'1 Jan 2020, data sampai 14.00 WIB',src:'ANTARA',url:ant},
+    {name:'Ciracas',area:'Jakarta Timur',lat:-6.336,lng:106.870,min:100,max:100,when:'1 Jan 2020, data sampai 14.00 WIB',src:'ANTARA',url:ant},
+    {name:'Bambu Apus',area:'Jakarta Timur',lat:-6.314,lng:106.905,min:100,max:100,when:'1 Jan 2020, data sampai 14.00 WIB',src:'ANTARA',url:ant},
+    {name:'Penggilingan',area:'Jakarta Timur',lat:-6.202,lng:106.934,min:80,max:90,when:'1 Jan 2020, data sampai 14.00 WIB',src:'ANTARA',url:ant},
+    {name:'Menteng',area:'Jakarta Pusat',lat:-6.195,lng:106.833,min:80,max:80,when:'1 Jan 2020, data sampai 14.00 WIB',src:'ANTARA',url:ant},
+    {name:'Mampang Prapatan',area:'Jakarta Selatan',lat:-6.252,lng:106.825,min:80,max:80,when:'1 Jan 2020, data sampai 14.00 WIB',src:'ANTARA',url:ant},
+    {name:'Kelurahan Gedong, Pasar Rebo',area:'Jakarta Timur',lat:-6.311,lng:106.857,min:30,max:70,when:'1 Jan 2020, laporan pagi',src:'BNPB',url:bnpb},
+    {name:'Jalan Bambu Kuning, Cengkareng Barat',area:'Jakarta Barat',lat:-6.147,lng:106.728,min:50,max:60,when:'1 Jan 2020, laporan pagi',src:'BNPB',url:bnpb},
+    {name:'Perumahan Setneg Cempaka Putih',area:'Jakarta Pusat',lat:-6.174,lng:106.871,min:30,max:50,when:'1 Jan 2020, pukul 05.00 WIB',src:'BNPB',url:bnpb},
+    {name:'Kampus Borobudur, Kalimalang',area:'Jakarta Timur',lat:-6.242,lng:106.892,min:40,max:40,when:'1 Jan 2020, laporan pagi',src:'BNPB',url:bnpb},
+  ];
+  const categories = [
+    {id:'low',title:'10–30 cm',note:'Rendah',max:30,color:'#f5d74b'},
+    {id:'moderate',title:'31–70 cm',note:'Sedang',max:70,color:'#fb923c'},
+    {id:'high',title:'71–150 cm',note:'Tinggi',max:150,color:'#f472b6'},
+    {id:'extreme',title:'>150 cm',note:'Sangat tinggi',max:Infinity,color:'#f43f5e'},
+  ];
+  const classify = (cm) => categories.find(x=>cm<=x.max) || categories[3];
+  const fmt = p => p.min===p.max ? `${p.max} cm` : `${p.min}–${p.max} cm`;
+
+  // Peta ini tidak memerlukan Leaflet: setiap ubin OSM digambar dengan koordinat
+  // Web Mercator yang dihitung langsung, sehingga tak tergantung CSS Leaflet/CDN.
+  const el = id => document.getElementById(id);
+  const mapEl = el('map'), tilesEl = el('tiles'), markersEl = el('markers');
+  const footprintEl = el('flood-footprint'), statusEl = el('layerStatus');
+  const initial = {lat: -6.234, lng: 106.833, zoom: 11};
+  const view = {...initial};
+  const tileSize = 256;
+  let currentFilter = 'all';
+  const tiles = new Map();
+  const tileStats = {failed: 0, completed: 0};
+  const markerObjects = [];
+  let overlayImage = null;
+  const markerTitle = p => `${p.name}: ${fmt(p)} (tinggi genangan)`;
+
+  function project(lat, lng, zoom) {
+    const n = tileSize * (2 ** zoom);
+    const safeLat = Math.max(-85.05112878, Math.min(85.05112878, lat));
+    const sin = Math.sin(safeLat * Math.PI / 180);
+    return {x: (lng + 180) / 360 * n,
+      y: (0.5 - Math.log((1 + sin) / (1 - sin)) / (4 * Math.PI)) * n};
+  }
+  function unproject(x, y, zoom) {
+    const n = tileSize * (2 ** zoom);
+    return {lng: x / n * 360 - 180, lat: Math.atan(Math.sinh(Math.PI * (1 - 2 * y / n))) * 180 / Math.PI};
+  }
+  function bounds() { return {width: mapEl.clientWidth, height: mapEl.clientHeight}; }
+  function centerOffset() {
+    const b = bounds(), c = project(view.lat, view.lng, view.zoom);
+    return {x: b.width / 2 - c.x, y: b.height / 2 - c.y};
+  }
+  function position(lat, lng) {
+    const p = project(lat, lng, view.zoom), o = centerOffset();
+    return {x: p.x + o.x, y: p.y + o.y};
+  }
+  function updateTiles() {
+    const b = bounds();
+    if (b.width < 20 || b.height < 20) return;
+    const offset = centerOffset();
+    const n = 2 ** view.zoom;
+    const minX = Math.floor(-offset.x / 256);
+    const maxX = Math.floor((b.width - 1 - offset.x) / 256);
+    const minY = Math.max(0, Math.floor(-offset.y / 256));
+    const maxY = Math.min(n - 1, Math.floor((b.height - 1 - offset.y) / 256));
+    const visible = new Set();
+    for (let y = minY; y <= maxY; y++) for (let x = minX; x <= maxX; x++) {
+      const wx = ((x % n) + n) % n, key = `${view.zoom}/${x}/${y}`;
+      visible.add(key);
+      let img = tiles.get(key);
+      if (!img) {
+        img = document.createElement('img');
+        img.alt = '';
+        img.draggable = false;
+        img.decoding = 'async';
+        img.style.width = '256px';
+        img.style.height = '256px';
+        img.src = `https://tile.openstreetmap.org/${view.zoom}/${wx}/${y}.png`;
+        img.onerror = () => {
+          tileStats.failed++;
+          if (tileStats.failed > 2) {
+            const warning = el('map-loading'); warning.style.display = 'block';
+            warning.textContent = 'Sebagian ubin OpenStreetMap tidak bisa dimuat. Periksa koneksi internet atau coba refresh.';
+          }
+        };
+        tilesEl.appendChild(img);
+        tiles.set(key, img);
+      }
+      img.style.left = Math.round(x * 256 + offset.x) + 'px';
+      img.style.top = Math.round(y * 256 + offset.y) + 'px';
+    }
+    for (const [key, img] of tiles) if (!visible.has(key)) {img.remove(); tiles.delete(key);}
+  }
+  function updateMarkers() {
+    for (const obj of markerObjects) {
+      const p = position(obj.data.lat, obj.data.lng);
+      obj.button.style.left = p.x + 'px';
+      obj.button.style.top = p.y + 'px';
+      obj.button.style.display = (currentFilter === 'all' || classify(obj.data.max).id === currentFilter) ? 'block' : 'none';
+    }
+  }
+  const floodBounds = {north: -6.0938961711713295, south:-6.370815374230062,
+      west:106.68643852481813, east:106.97281430693481};
+  function updateFootprint() {
+    if (!overlayImage || !el('toggleFootprint').checked) {footprintEl.style.display = 'none'; return;}
+    footprintEl.style.display = 'block';
+    const a = position(floodBounds.north, floodBounds.west);
+    const b = position(floodBounds.south, floodBounds.east);
+    overlayImage.style.left = a.x + 'px'; overlayImage.style.top = a.y + 'px';
+    overlayImage.style.width = Math.max(0, b.x - a.x) + 'px';
+    overlayImage.style.height = Math.max(0, b.y - a.y) + 'px';
+  }
+  function render() { updateTiles(); updateMarkers(); updateFootprint(); }
+  function showDetail(p) {
+    const cat=classify(p.max);
+    el('detail').innerHTML = `<div class="eyebrow">${p.area}</div><h2 style="margin-top:8px">${p.name}</h2>`+
+      `<p class="metric" style="color:${cat.color}">${fmt(p)}</p><div class="sub"><b>${cat.note}</b> • rentang legenda BPBD</div>`+
+      `<p class="sub" style="margin-top:13px"><b>Waktu:</b> ${p.when}<br/><b>Sumber:</b> ${p.src}</p>`+
+      `<p class="small">Posisi titik adalah perkiraan pusat wilayah, bukan titik ukur GPS. Tidak mewakili seluruh kelurahan.</p>`+
+      `<a target="_blank" rel="noopener noreferrer" href="${p.url}">Lihat laporan sumber ↗</a>`;
+  }
+  function makeMarkers() {
+    for (const point of points) {
+      const button = document.createElement('button');
+      button.type='button'; button.className='map-pin';
+      button.style.backgroundColor = classify(point.max).color;
+      button.setAttribute('aria-label', markerTitle(point));
+      button.title = markerTitle(point);
+      button.addEventListener('click', e => {e.stopPropagation();showDetail(point);});
+      markersEl.appendChild(button);
+      markerObjects.push({data: point, button});
+    }
+  }
+  function renderFilters() {
+    const options = [{id:'all',title:'Semua titik',note:'',color:'#9acbda'}, ...categories];
+    el('filters').replaceChildren();
+    for (const cat of options) {
+      const count = cat.id === 'all' ? points.length : points.filter(p=>classify(p.max).id===cat.id).length;
+      const button = document.createElement('button');
+      button.className = 'filter' + (cat.id===currentFilter?' active':'');
+      button.setAttribute('aria-pressed', cat.id === currentFilter ? 'true' : 'false');
+      const dot = document.createElement('span'); dot.className = 'dot'; dot.style.background = cat.color;
+      const label = document.createElement('span'); label.textContent = cat.title+(cat.note?' · '+cat.note:'');
+      const countEl = document.createElement('span'); countEl.className = 'count';countEl.textContent = count;
+      button.append(dot,label,countEl);
+      button.onclick=()=>{currentFilter=cat.id;renderFilters();updateMarkers();};
+      el('filters').append(button);
+    }
+  }
+  function clampCenter() {
+    view.lat = Math.max(-6.7, Math.min(-5.7, view.lat));
+    view.lng = Math.max(106.15, Math.min(107.5, view.lng));
+  }
+  function zoom(by) {view.zoom = Math.max(9, Math.min(16, view.zoom + by)); render();}
+  let down = null;
+  mapEl.addEventListener('pointerdown', event => {
+    if (event.target.closest('.map-pin')) return;
+    down = {x:event.clientX,y:event.clientY, center: project(view.lat,view.lng,view.zoom)};
+    mapEl.setPointerCapture(event.pointerId); mapEl.classList.add('dragging');
+  });
+  mapEl.addEventListener('pointermove', event => {
+    if (!down) return;
+    const c = unproject(down.center.x - (event.clientX - down.x),down.center.y-(event.clientY-down.y),view.zoom);
+    view.lat = c.lat;view.lng = c.lng;clampCenter();render();
+  });
+  function stopDrag() {down=null;mapEl.classList.remove('dragging');}
+  mapEl.addEventListener('pointerup',stopDrag);
+  mapEl.addEventListener('pointercancel',stopDrag);
+  mapEl.addEventListener('lostpointercapture',stopDrag);
+  mapEl.addEventListener('wheel',event=>{
+    event.preventDefault();
+    zoom(event.deltaY<0?1:-1);
+  }, {passive:false});
+  el('zoomIn').onclick=()=>zoom(1); el('zoomOut').onclick=()=>zoom(-1);
+  el('resetJakarta').onclick=()=>{Object.assign(view,initial);render();};
+  el('toggleFootprint').onchange=updateFootprint;
+  makeMarkers();renderFilters();showDetail(points[0]);render();
+  if ('ResizeObserver' in window) new ResizeObserver(render).observe(mapEl);
+  window.addEventListener('resize',render);
+  // Data geospasial BNPB, tanggal 1-3 Januari 2020. Tanpa atribut kedalaman per poligon.
+  const service='https://gis.bnpb.go.id/server/rest/services/Banjir_Jakarta_2020/GENANGAN_BANJIR_DKI_1_3_JANUARI_2020/MapServer';
+  const exportParams=new URLSearchParams({
+    bbox:`${floodBounds.west},${floodBounds.south},${floodBounds.east},${floodBounds.north}`,
+    bboxSR:'4326',imageSR:'4326',size:'1200,1200',format:'png32',transparent:'true',f:'image'
+  });
+  overlayImage=new Image();
+  overlayImage.alt='Area genangan BNPB 1-3 Januari 2020';
+  overlayImage.onload=()=>{ statusEl.textContent='Area genangan BNPB berhasil dimuat. Bidang biru tidak menunjukkan kedalaman air.'; updateFootprint(); };
+  overlayImage.onerror=()=>{ statusEl.textContent='Layanan area genangan BNPB tidak dapat diakses. Titik tinggi air masih bisa dilihat.';statusEl.classList.add('bad');overlayImage=null; };
+  overlayImage.src = `${service}/export?${exportParams.toString()}`;
+  footprintEl.append(overlayImage);
+  updateFootprint();
+})();
+</script>
+</body>
+</html>

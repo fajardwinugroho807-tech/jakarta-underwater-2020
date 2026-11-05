@@ -195,6 +195,64 @@ const additionalChapters = [
   },
 ];
 
+// KATEGORI DAMPAK — uraian edukatif, bukan statistik korban terverifikasi.
+const floodImpacts = [
+  {
+    number: "01",
+    title: "Permukiman dan Infrastruktur",
+    summary: "Rumah, fasilitas umum, dan layanan dasar terganggu.",
+    details: [
+      "Genangan di lingkungan permukiman menghambat aktivitas penghuni dan berpotensi merusak lantai, dinding, perabot, peralatan elektronik, serta dokumen penting. Tingkat kerusakan bergantung pada kedalaman, lama genangan, dan kondisi bangunan.",
+      "Fasilitas umum seperti jalan lingkungan, sekolah, tempat ibadah, jaringan listrik, dan sarana air bersih juga dapat mengalami gangguan. Sesudah air surut, pemeriksaan keamanan bangunan dan instalasi listrik menjadi bagian penting pemulihan.",
+    ],
+  },
+  {
+    number: "02",
+    title: "Pengungsian dan Kehidupan Sosial",
+    summary: "Warga membutuhkan tempat aman, logistik, dan dukungan sosial.",
+    details: [
+      "Banjir memaksa sebagian warga meninggalkan rumah menuju tempat yang lebih aman. Kebutuhan dasar selama pengungsian meliputi air minum, makanan, pakaian, tempat tidur, sanitasi, obat-obatan, dan informasi yang jelas.",
+      "Anak-anak, lansia, penyandang disabilitas, serta orang yang membutuhkan layanan kesehatan memerlukan perhatian tambahan. Terpisahnya keluarga, ketidakpastian kondisi rumah, dan kehilangan barang dapat menimbulkan tekanan psikologis.",
+    ],
+  },
+  {
+    number: "03",
+    title: "Transportasi dan Mobilitas",
+    summary: "Jalan tergenang menghambat perjalanan dan distribusi barang.",
+    details: [
+      "Genangan pada ruas jalan dapat mengurangi akses kendaraan dan pejalan kaki, mengubah rute perjalanan, serta memperlambat layanan darurat. Kendaraan yang terendam juga berisiko mengalami kerusakan.",
+      "Gangguan mobilitas berdampak berantai pada perjalanan ke tempat kerja, sekolah, fasilitas kesehatan, dan pengiriman kebutuhan pokok. Kondisi setiap jalur berbeda sehingga status akses perlu dilihat berdasarkan laporan pada waktu kejadian.",
+    ],
+  },
+  {
+    number: "04",
+    title: "Ekonomi dan Mata Pencaharian",
+    summary: "Usaha berhenti sementara dan biaya pemulihan meningkat.",
+    details: [
+      "Kerugian langsung dapat berupa kerusakan bangunan, stok dagangan, mesin, kendaraan, dan peralatan usaha. Bagi pelaku usaha kecil, kehilangan barang sekaligus tempat berjualan dapat menghambat pemulihan pendapatan.",
+      "Kerugian tidak langsung meliputi kegiatan usaha yang tertunda, berkurangnya pelanggan, terhambatnya distribusi, serta waktu kerja yang hilang. Nilai kerugian total memerlukan metode penilaian dan sumber resmi, sehingga tidak ditampilkan sebagai angka perkiraan tanpa dasar.",
+    ],
+  },
+  {
+    number: "05",
+    title: "Kesehatan dan Sanitasi",
+    summary: "Air tercemar dan sanitasi terganggu meningkatkan risiko kesehatan.",
+    details: [
+      "Air banjir dapat bercampur dengan limbah, sampah, dan kotoran sehingga kontak dengan air tercemar perlu diminimalkan. Gangguan akses air bersih dan toilet juga dapat meningkatkan risiko penyakit terkait sanitasi.",
+      "Setelah banjir, pembersihan rumah, pengelolaan sampah, pengeringan ruangan, dan pemeriksaan kualitas air menjadi langkah penting. Warga dengan luka, demam, atau keluhan kesehatan perlu memperoleh pemeriksaan tenaga medis.",
+    ],
+  },
+  {
+    number: "06",
+    title: "Lingkungan dan Pemulihan Kota",
+    summary: "Sampah, lumpur, dan kerusakan fasilitas memerlukan penanganan bertahap.",
+    details: [
+      "Banjir dapat meninggalkan endapan lumpur, sampah, serta material yang terbawa aliran air. Pembersihan tidak hanya dilakukan di rumah, tetapi juga di jalan, saluran, sekolah, dan fasilitas pelayanan masyarakat.",
+      "Pemulihan mencakup perbaikan infrastruktur dan penguatan kesiapsiagaan. Evaluasi drainase, perlindungan ruang resapan, pengelolaan sungai, dan sistem peringatan dini penting untuk mengurangi risiko kejadian berikutnya.",
+    ],
+  },
+];
+
 // GABUNGKAN BAB 1–5 DAN BAB 6–12
 const allChapters = [...chapters, ...additionalChapters];
 
@@ -668,6 +726,58 @@ export default function DisasterSection() {
             banjir tertentu pada Januari 2020.
           </p>
         </div>
+
+        {/* DAMPAK BANJIR — BAGIAN KHUSUS */}
+        <section id="dampak-banjir" className="mt-32 border-t border-white/15 pt-20" aria-labelledby="impact-heading">
+          <div className="disaster-reveal">
+            <p className="text-xs font-bold uppercase tracking-[0.25em] text-[#9dcbd5]">
+              Human Impact / January 2020
+            </p>
+            <h3 id="impact-heading" className="mt-5 max-w-5xl text-4xl font-bold tracking-[-0.05em] md:text-6xl">
+              Dampak banjir terhadap kehidupan Jakarta.
+            </h3>
+            <p className="mt-7 max-w-4xl text-base leading-9 text-[#a6b6bf] md:text-lg">
+              Banjir awal Januari 2020 bukan sekadar peristiwa air menggenangi jalan.
+              Dampaknya merambat ke tempat tinggal, mobilitas, penghidupan, kesehatan,
+              dan proses pemulihan warga. Enam kelompok berikut menjelaskan bentuk
+              dampak yang relevan untuk memahami kejadian tersebut.
+            </p>
+          </div>
+
+          <div className="mt-12 grid gap-5 lg:grid-cols-2">
+            {floodImpacts.map((impact) => (
+              <article key={impact.number} className="disaster-reveal border border-white/15 bg-[#12232e] p-7 md:p-10">
+                <div className="flex items-center justify-between border-b border-white/15 pb-5">
+                  <span className="text-xs font-bold uppercase tracking-[0.2em] text-[#9dcbd5]">
+                    Impact / {impact.number}
+                  </span>
+                  <Waves size={23} className="text-[#9dcbd5]" aria-hidden="true" />
+                </div>
+                <h4 className="mt-8 text-2xl font-bold tracking-tight md:text-3xl">{impact.title}</h4>
+                <p className="mt-4 text-base font-medium leading-7 text-[#b7dce5]">{impact.summary}</p>
+                <div className="mt-6 space-y-5">
+                  {impact.details.map((paragraph, index) => (
+                    <p key={index} className="text-sm leading-8 text-[#a6b6bf] md:text-base">
+                      {paragraph}
+                    </p>
+                  ))}
+                </div>
+              </article>
+            ))}
+          </div>
+
+          <div className="mt-8 border-l-2 border-[#9dcbd5] bg-[#12232e] p-6 md:p-8">
+            <p className="text-sm font-bold uppercase tracking-wider text-[#9dcbd5]">Catatan data historis</p>
+            <p className="mt-3 max-w-5xl text-sm leading-8 text-[#a6b6bf]">
+              Uraian di atas menjelaskan jenis dampak dan mekanismenya, bukan jumlah
+              korban, jumlah rumah rusak, atau nilai kerugian yang sudah diverifikasi
+              untuk tiap wilayah. Angka historis perlu dilengkapi tanggal laporan,
+              cakupan DKI Jakarta atau Jabodetabek, serta sumber resmi sebelum ditampilkan.
+              Data pengungsi dan posko simulasi pada dashboard administrasi tidak
+              digunakan sebagai statistik historis kejadian 2020.
+            </p>
+          </div>
+        </section>
 
         {/* MATERI MENDALAM 12 BAB */}
         <div 

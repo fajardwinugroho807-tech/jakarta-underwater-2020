@@ -1,0 +1,461 @@
+<!doctype html>
+
+<html lang="id">
+
+<head>
+
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+
+<title>Jakarta Underwater — Flood Simulation Lab</title>
+
+<style>
+
+:root{color-scheme:dark;--ink:#dfeff7;--muted:#91b0bf;--cyan:#73e3f1;--bg:#07141f;--stroke:rgba(162,208,227,.16)}
+
+*{box-sizing:border-box}body{margin:0;font-family:Inter,ui-sans-serif,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;background:#07141f;color:var(--ink);overflow-x:hidden}
+
+.shell{width:100%;max-width:1600px;margin:0 auto;padding:0 0 16px}
+
+.header{display:flex;align-items:flex-end;justify-content:space-between;gap:20px;padding:22px 28px 20px}
+
+.eyebrow{color:#82dce8;font-size:11px;font-weight:900;letter-spacing:.24em;text-transform:uppercase}
+
+h1{font-size:clamp(24px,3vw,43px);letter-spacing:-.048em;line-height:1.08;margin:10px 0 9px;color:#f5faff}h1 span{color:#7dd8e8}
+
+.header p{color:#92aebb;font-size:13px;line-height:1.65;max-width:670px;margin:0}
+
+.notice{flex:none;display:inline-flex;gap:9px;align-items:center;border:1px solid #315466;border-radius:999px;padding:11px 13px;font-size:10px;letter-spacing:.11em;font-weight:850;color:#bdeaf1;background:#0b2532;text-transform:uppercase}
+
+.notice i,.live i{width:7px;height:7px;background:#83e2ee;border-radius:50%;box-shadow:0 0 12px #48dce9;display:inline-block}
+
+.topbar{display:flex;align-items:center;justify-content:space-between;gap:14px;padding:0 28px 14px}
+
+.tabs{display:flex;gap:4px;padding:5px;border:1px solid var(--stroke);border-radius:13px;background:#091b28}
+
+.tabs button{border:0;background:transparent;color:#93adbb;padding:12px 18px;cursor:pointer;border-radius:9px;font-weight:800;font-size:12px;transition:.2s}
+
+.tabs button.active{background:#b1e7ee;color:#0b2632;box-shadow:0 2px 12px #0005}
+
+.live{color:#8baebb;font-size:11px;font-weight:800;letter-spacing:.12em;display:flex;align-items:center;gap:8px}
+
+.stage{position:relative;overflow:hidden;border-radius:21px;background:#102b3e;border:1px solid #375466;min-height:390px;box-shadow:inset 0 0 80px rgba(3,12,23,.4)}
+
+.stage canvas{display:block;width:100%;height:auto;aspect-ratio:1200/620;min-height:390px;object-fit:cover}
+
+.stage:before{pointer-events:none;content:"";position:absolute;inset:0;border-radius:20px;box-shadow:inset 0 0 85px #05142388;z-index:2}
+
+.overlay{position:absolute;z-index:3;top:24px;left:25px;width:min(260px,48vw);border:1px solid #8fd7e638;border-radius:14px;padding:17px 19px;background:linear-gradient(145deg,rgba(4,20,32,.88),rgba(7,29,46,.78));backdrop-filter:blur(12px);box-shadow:0 16px 35px #02131c4d}
+
+.overlay .kicker{font-size:10px;letter-spacing:.17em;color:#99d5e5;font-weight:850}
+
+.overlay .value{font-size:52px;line-height:1.04;letter-spacing:-.07em;font-weight:900;color:#f8fcff;margin-top:6px;font-variant-numeric:tabular-nums}
+
+.overlay .phase{font-weight:750;font-size:12px;color:#bceef2;margin-top:5px}
+
+.overlay .mini{font-size:11px;line-height:1.5;color:#9db8c5;margin-top:8px}
+
+.overlay .bar{background:#2a4554;height:5px;overflow:hidden;border-radius:8px;margin-top:14px}
+
+.overlay .bar span{display:block;height:100%;background:linear-gradient(90deg,#76d3db,#e2f2bd);border-radius:8px;transition:width .14s}
+
+.scene-key{display:none}
+
+.legend{position:absolute;z-index:3;right:23px;bottom:23px;display:flex;gap:16px;flex-wrap:wrap;border:1px solid #85c9d33d;border-radius:12px;background:#071d2bdc;backdrop-filter:blur(10px);padding:12px 17px;font-size:10px;font-weight:800;letter-spacing:.06em;color:#d1e8f0}
+
+.legend span{display:inline-flex;align-items:center;gap:6px}.legend b{width:8px;height:8px;border-radius:3px;background:#2bb8d7;display:inline-block}.legend span:nth-child(2) b{background:#86c5a5}.legend span:nth-child(3) b{background:#efbd77}
+
+.mode-label{position:absolute;z-index:3;left:27px;bottom:29px;color:#c5e4e9;font-size:10px;font-weight:850;letter-spacing:.18em;text-shadow:0 2px 6px #06111f}
+
+.controls{margin-top:14px;border:1px solid var(--stroke);border-radius:18px;background:linear-gradient(130deg,#0c2231,#0a1a27);display:grid;grid-template-columns:1.6fr auto .85fr;align-items:center;gap:24px;padding:19px 24px;}
+
+.label-row{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:11px}.label-row label{font-size:12px;font-weight:850;color:#d4e9f0}.label-row strong{font-size:14px;font-weight:900;color:#82e7f3;font-variant-numeric:tabular-nums}
+
+input[type=range]{--pos:20%;appearance:none;-webkit-appearance:none;width:100%;height:6px;border-radius:999px;background:linear-gradient(90deg,#79e6ed var(--pos),#244558 var(--pos));outline:none;cursor:pointer;touch-action:pan-y}input[type=range]::-webkit-slider-thumb{appearance:none;width:18px;height:18px;border:4px solid #baf5fb;border-radius:50%;background:#0e7486;box-shadow:0 0 0 4px #70cddb22}input[type=range]::-moz-range-thumb{width:11px;height:11px;border:4px solid #baf5fb;border-radius:50%;background:#0e7486}
+
+.extents{display:flex;justify-content:space-between;color:#66899b;font-size:9px;letter-spacing:.16em;font-weight:850;margin-top:9px}
+
+.buttons{display:flex;align-items:center;gap:9px}.buttons button{border:1px solid #4c7789;color:#dbe9ef;background:#133144;border-radius:11px;padding:13px 16px;font-size:12px;font-weight:850;cursor:pointer;min-height:46px;transition:transform .15s,background .2s}.buttons button:hover{transform:translateY(-2px);background:#255062}.buttons .primary{background:#a7e9ef;border-color:#a7e9ef;color:#052531;min-width:105px}.buttons .primary:hover{background:#d0fbff}
+
+.depth-control{grid-column:1/-1;border-top:1px solid var(--stroke);padding-top:14px}
+
+.disclaimer{display:flex;gap:10px;align-items:flex-start;margin:14px 8px 0;color:#8caab9;font-size:12px;line-height:1.6}.disclaimer b{color:#b5d5df}.disclaimer svg{flex:none;margin-top:1px}
+
+@media(max-width:850px){.header{padding:20px 14px 15px}.notice{display:none}.topbar{padding:0 13px 12px}.stage{border-radius:15px;min-height:360px}.stage canvas{height:420px;aspect-ratio:auto}.overlay{left:13px;top:13px;padding:12px;width:190px}.overlay .value{font-size:37px}.overlay .mini{display:none}.legend{right:10px;bottom:10px;gap:7px;padding:9px;font-size:8px}.mode-label{left:14px;bottom:22px;display:none}.controls{grid-template-columns:1fr auto;gap:17px;margin-top:9px;padding:18px 14px}.rain-control{grid-column:1/-1;grid-row:2}.disclaimer{margin:13px 8px}.tabs button{padding:11px 12px;font-size:11px}.live{font-size:9px}}
+
+@media(max-width:460px){.header h1{font-size:25px}.header p{font-size:12px}.topbar .live{display:none}.stage canvas{height:360px}.overlay{width:155px}.overlay .value{font-size:32px}.overlay .phase{font-size:11px}.legend{max-width:200px;gap:7px}.controls{grid-template-columns:1fr}.buttons{grid-row:2}.rain-control{grid-row:3}.buttons button{flex:1}}
+
+@media(prefers-reduced-motion:reduce){*{scroll-behavior:auto!important;transition:none!important}}
+
+</style>
+
+</head>
+
+<body>
+
+<div class="shell">
+
+<header class="header"><div><div class="eyebrow">Jakarta Underwater / Visual Experience</div><h1>Ketika kota <span>bertemu air.</span></h1><p>Jelajahi air yang semakin tinggi hingga merendam lantai bawah gedung dalam ilustrasi kota isometrik. Seluruh ketinggian dan perubahan air merupakan skenario visual edukatif, bukan pengukuran banjir Jakarta 2020.</p></div><div class="notice"><i></i> Ketinggian air bisa diatur • Ilustrasi</div></header>
+
+<div class="topbar"><div class="tabs" role="tablist" aria-label="Pilih tampilan"><button id="cityBtn" class="active" role="tab" aria-selected="true">◈ &nbsp; Kota isometrik</button><button id="mapBtn" role="tab" aria-selected="false">▦ &nbsp; Peta skematis</button></div><div class="live"><i></i> MODE INTERAKTIF</div></div>
+
+<div class="stage"><canvas id="scene" aria-label="Simulasi edukatif banjir dengan kota isometrik, sungai, bangunan, jalan, dan genangan" role="img"></canvas><div class="overlay"><div class="kicker">TAHAP GENANGAN</div><div class="value" id="valueLabel">20<span style="font-size:.55em;color:#a7e3e8">%</span></div><div class="phase" id="phaseLabel">Genangan mulai meluas</div><div class="mini">Atur slider di bawah untuk melihat perubahan visual.</div><div class="bar"><span id="miniBar" style="width:20%"></span></div></div><div class="mode-label" id="modeLabel">ISOMETRIC CITY / ARTISTIC VISUALIZATION</div><div class="legend"><span><b></b> Genangan</span><span><b></b> Ruang hijau</span><span><b></b> Jalan kota</span></div></div>
+
+<div class="controls"><div><div class="label-row"><label for="progress">Tahap simulasi</label><strong id="progressPct">20%</strong></div><input aria-label="Tahap simulasi" type="range" id="progress" min="0" max="100" value="20"><div class="extents"><span>AWAL</span><span>GENANGAN MELUAS</span><span>PUNCAK ILUSTRASI</span></div></div><div class="buttons"><button class="primary" id="play">▶ &nbsp; Play</button><button id="reset">↺ &nbsp; Reset</button></div><div class="rain-control"><div class="label-row"><label for="rain">Intensitas hujan visual</label><strong id="rainLabel">Sedang</strong></div><input aria-label="Intensitas hujan visual" type="range" id="rain" min="0" max="100" step="25" value="50"><div class="extents"><span>RINGAN</span><span>LEBAT</span></div></div><div class="depth-control"><div class="label-row"><label for="maxDepth">Batas tinggi air maksimum (visual)</label><strong id="maxDepthLabel">68 unit</strong></div><input aria-label="Atur batas tinggi air maksimum" type="range" id="maxDepth" min="45" max="145" step="1" value="68"><div class="extents"><span>LEBIH RENDAH</span><span>LEBIH TINGGI</span></div></div></div>
+
+<p class="disclaimer"><svg width="18" height="18" viewBox="0 0 20 20" fill="none"><circle cx="10" cy="10" r="8" stroke="#7fd3e2" stroke-width="1.5"/><path d="M10 8.5V14M10 5.3V6" stroke="#7fd3e2" stroke-width="1.7" stroke-linecap="round"/></svg><span><b>Penting:</b> Ini visualisasi skenario untuk edukasi, <b>bukan rekonstruksi akurat</b> luas, kecepatan, waktu, atau tinggi air banjir Jakarta 2020. Untuk data historis, gunakan halaman Peta Banjir bersumber BNPB/BPBD.</span></p>
+
+</div>
+
+<script>
+
+(()=>{'use strict';
+
+const canvas=document.querySelector('#scene'),ctx=canvas.getContext('2d',{alpha:false});
+
+const valInput=document.querySelector('#progress'),rainInput=document.querySelector('#rain'),depthInput=document.querySelector('#maxDepth');
+
+const el={value:document.querySelector('#valueLabel'),pct:document.querySelector('#progressPct'),phase:document.querySelector('#phaseLabel'),bar:document.querySelector('#miniBar'),rain:document.querySelector('#rainLabel'),mode:document.querySelector('#modeLabel'),play:document.querySelector('#play')};
+
+const W=1200,H=620;
+
+let progress=20,rain=50,maxFloodDepth=68,mode='city',playing=false,last=0,time=0;
+
+function ease(t){t=Math.max(0,Math.min(1,t));return t*t*(3-2*t)}
+
+function rgb(hex){return [parseInt(hex.slice(1,3),16),parseInt(hex.slice(3,5),16),parseInt(hex.slice(5,7),16)]}
+
+function shade(hex,v){const a=rgb(hex);return 'rgb('+a.map(n=>Math.max(0,Math.min(255,n+v))).join(',')+')'}
+
+function polygon(points,fill,stroke=null,line=1){ctx.beginPath();points.forEach(([x,y],i)=>i?ctx.lineTo(x,y):ctx.moveTo(x,y));ctx.closePath();if(fill){ctx.fillStyle=fill;ctx.fill()}if(stroke){ctx.lineWidth=line;ctx.strokeStyle=stroke;ctx.stroke()}}
+
+function line(points,color,width=1,dash=[]){ctx.beginPath();points.forEach(([x,y],i)=>i?ctx.lineTo(x,y):ctx.moveTo(x,y));ctx.strokeStyle=color;ctx.lineWidth=width;ctx.setLineDash(dash);ctx.lineCap='round';ctx.lineJoin='round';ctx.stroke();ctx.setLineDash([])}
+
+function ellipse(x,y,rx,ry,fill){ctx.beginPath();ctx.ellipse(x,y,Math.max(.01,rx),Math.max(.01,ry),0,0,Math.PI*2);ctx.fillStyle=fill;ctx.fill()}
+
+function path(p1,p2,p3,p4,color,width){ctx.beginPath();ctx.moveTo(...p1);ctx.bezierCurveTo(...p2,...p3,...p4);ctx.strokeStyle=color;ctx.lineWidth=width;ctx.lineCap='round';ctx.stroke()}
+
+const shadowGradient=(x,y,r,color)=>{const g=ctx.createRadialGradient(x,y,0,x,y,r);g.addColorStop(0,color);g.addColorStop(1,'transparent');return g};
+
+function bg(){let g=ctx.createLinearGradient(0,0,1200,620);g.addColorStop(0,'#0c2a3a');g.addColorStop(.48,'#12374a');g.addColorStop(1,'#091d30');ctx.fillStyle=g;ctx.fillRect(0,0,W,H);ctx.fillStyle=shadowGradient(855,132,370,'#245c6a80');ctx.fillRect(300,-300,1000,900);
+
+ for(let i=0;i<6;i++){ctx.strokeStyle='rgba(139,211,230,'+(0.06-i*.007)+')';ctx.lineWidth=1;ctx.beginPath();ctx.ellipse(920,220,340+i*65,180+i*50,-.25,0,6.3);ctx.stroke()}
+
+ // distant architecture silhouette
+
+ for(let i=0;i<54;i++){let x=i*27-10;let hh=30+(i*53%75);ctx.fillStyle=i%4?'#0b2939a8':'#173d4e7a';ctx.fillRect(x,325-hh,19+(i%3)*6,hh);if(i%3===0){ctx.fillStyle='#b0e5ed26';for(let t=0;t<3;t++)ctx.fillRect(x+5,326-hh+t*13,2,4)}}
+
+ const fog=ctx.createLinearGradient(0,270,0,450);fog.addColorStop(0,'#102f4400');fog.addColorStop(1,'#061828a9');ctx.fillStyle=fog;ctx.fillRect(0,270,W,180);
+
+ // visual chart lines
+
+ for(let i=0;i<5;i++)line([[25,520+i*16],[220,505+i*18],[550,544+i*10]],'#95d7ea0b',1);
+
+ }
+
+const P=(x,y,z=0)=>[618+(x-y)*.62,154+(x+y)*.278-z*1.05];
+
+// Skenario ilustratif: tinggi air lebih nyata pada sisi gedung, bukan sekadar
+
+// garis biru di tanah. Angka ini bukan ukuran kedalaman banjir historis Jakarta.
+
+function floodDepthAt(x,y){
+
+ const f=Math.max(0,Math.min(1,progress/100));
+
+ if(f<=0)return 0;
+
+ const riverCenter=284+23*Math.sin((x-80)/140);
+
+ const distance=Math.abs(y-riverCenter);
+
+ const reach=70+560*Math.pow(f,.59);
+
+ const proximity=Math.max(0,1-Math.pow(distance/reach,1.75));
+
+ return (10+(maxFloodDepth-10)*Math.pow(f,.82))*proximity;
+
+}
+
+function drawBuildingFlood(b,basepoints,tops){
+
+ const {x,y,w,d,h,i}=b;
+
+ const a=floodDepthAt(x+w,y),mid=floodDepthAt(x+w,y+d),c=floodDepthAt(x,y+d);
+
+ if(Math.max(a,mid,c)<1)return;
+
+ const A=P(x+w,y,Math.min(h,a));
+
+ const B=P(x+w,y+d,Math.min(h,mid));
+
+ const C=P(x,y+d,Math.min(h,c));
+
+ // Air merendam dasar dua fasad yang terlihat, dengan garis muka air.
+
+ polygon([A,B,basepoints[2],basepoints[1]],'rgba(13,150,203,.72)');
+
+ polygon([B,C,basepoints[3],basepoints[2]],'rgba(18,129,181,.78)');
+
+ line([A,B],'rgba(180,247,248,.90)',2.1);
+
+ line([B,C],'rgba(166,240,245,.82)',1.8);
+
+ // Cahaya yang menari di sisi bangunan yang terendam.
+
+ if(i%2===0){line([[A[0],A[1]+5],[B[0],B[1]+5]],'rgba(90,211,231,.27)',2);}
+
+ if((a+mid+c)/3>=h){polygon(tops,'rgba(34,160,193,.58)');}
+
+}
+
+
+
+function worldPoly(pts,fill,stroke,w){polygon(pts.map(p=>P(...p)),fill,stroke,w)}
+
+const allBuildings=[];
+
+const palettes=['#799cad','#d4c6a9','#537b91','#8eabb5','#b4a7a0','#6a91a6','#e4bfa0'];
+
+const slots=[
+
+[40,35,86,64,66,0],[224,33,68,60,108,2],[320,30,68,66,64,3],[475,34,90,64,128,1],[578,38,58,70,86,5],[740,37,65,64,65,0],
+
+[39,202,92,80,145,3],[218,202,75,73,78,1],[309,208,70,60,120,2],[477,207,84,80,96,6],[582,202,66,82,146,5],[741,207,72,68,83,4],
+
+[36,373,88,83,83,4],[217,375,65,75,135,2],[311,376,84,73,85,0],[475,378,78,73,154,3],[580,379,70,65,102,1],[745,380,66,78,132,5]
+
+];
+
+slots.forEach(([x,y,w,d,h,c],i)=>allBuildings.push({x,y,w,d,h,base:palettes[c],i}));
+
+function drawGround(){
+
+ // floating ground slab
+
+ worldPoly([[0,0],[855,0],[855,567],[0,567]],'#152e3c','#3a6c7b',3);
+
+ polygon([P(0,567),P(855,567),[P(855,567)[0],P(855,567)[1]+48],[P(0,567)[0],P(0,567)[1]+48]],'#183446');
+
+ polygon([P(855,0),P(855,567),[P(855,567)[0],P(855,567)[1]+48],[P(855,0)[0],P(855,0)[1]+48]],'#0b293a');
+
+ let g=ctx.createLinearGradient(270,190,1000,530);g.addColorStop(0,'#40636a');g.addColorStop(.48,'#294b54');g.addColorStop(1,'#254956');worldPoly([[0,0],[855,0],[855,567],[0,567]],g,'#6aa9af3b',2);
+
+ ctx.save();ctx.beginPath();const a=[[0,0],[855,0],[855,567],[0,567]].map(v=>P(...v));a.forEach((p,i)=>i?ctx.lineTo(...p):ctx.moveTo(...p));ctx.closePath();ctx.clip();
+
+ // faint property grid
+
+ for(let t=0;t<=855;t+=44){line([P(t,0),P(t,567)],'#bfe2d40b',1)}for(let t=0;t<=567;t+=44){line([P(0,t),P(855,t)],'#bfe2d40b',1)}
+
+ // urban roads with sidewalks
+
+ for(const x of [153,417,686]){worldPoly([[x-5,0],[x+54,0],[x+54,567],[x-5,567]],'#789a9d');worldPoly([[x,0],[x+48,0],[x+48,567],[x,567]],'#273e4b');line([P(x+24,0),P(x+24,567)],'#dfdbb77d',1.6,[9,13])}
+
+ for(const y of [153,323,492]){worldPoly([[0,y-6],[855,y-6],[855,y+48],[0,y+48]],'#72999b');worldPoly([[0,y],[855,y],[855,y+42],[0,y+42]],'#314a56');line([P(0,y+21),P(855,y+21)],'#e3dac690',1.4,[8,11])}
+
+ // lawn strips
+
+ [[100,118],[360,270],[765,530],[600,185],[70,530]].forEach(([x,y],i)=>{ctx.fillStyle='#6dbea14d';ellipse(...P(x,y),22+i%3*4,12+i%3*2,'#6cb69e70')});
+
+ // river sweeping through the district
+
+ const river=[P(-70,292),P(210,240),P(456,284),P(905,296)];
+
+ path(...river,'#0d3c52',61);path(...river,'#146d85',49);path(...river,'#1896b1',34);path(...river,'#80ced7ab',2.5);
+
+ // Banjir menjalar dari alur sungai dengan genangan lebih lebar.
+
+ const flood=(progress/100);if(flood>0){
+
+  path(...river,'rgba(10,139,190,'+(.25+flood*.30)+')',88+flood*415);
+
+  path(...river,'rgba(45,175,216,'+(.17+flood*.24)+')',65+flood*355);
+
+  path(...river,'rgba(162,239,242,'+(.18+flood*.11)+')',52+flood*195);
+
+ }
+
+ // bridges crossing river, dark outline, warm top
+
+ for(const x of [183,452,729]){worldPoly([[x-8,259],[x+62,259],[x+62,336],[x-8,336]],'#172b39');worldPoly([[x,264],[x+50,264],[x+50,332],[x,332]],'#9bada7');line([P(x+25,268),P(x+25,328)],'#faf0ca',1.4,[7,8])}
+
+ // parking and crossings
+
+ for(const [x,y] of [[164,154],[422,325],[690,155]])for(let j=0;j<5;j++)line([P(x+j*7,y+6),P(x+j*7,y+28)],'#e2f1e47a',1.7);
+
+ // flooding small sheltered contours grow with stage
+
+ if(flood>.025){const puddles=[[168,390,18],[585,96,14],[380,445,21],[775,424,18],[103,220,19],[665,359,13],[290,195,22],[510,385,20]];
+
+ puddles.forEach(([x,y,r],i)=>{const q=P(x,y);const d=floodDepthAt(x,y)/160;
+
+ ellipse(q[0],q[1],(r+flood*98+d*38)*(i%2?.8:1.13),r*.45+flood*32+d*17,`rgba(30,159,213,${.17+flood*.33})`);
+
+ ellipse(q[0]+5,q[1]-2,(r+flood*57+d*22),2.5,`rgba(176,243,248,${.10+flood*.19})`);
+
+ })}
+
+ ctx.restore();
+
+ }
+
+function tree(x,y,k=1){const [sx,sy]=P(x,y);ellipse(sx+6,sy+3,13*k,6*k,'#021b2688');line([[sx,sy-2],[sx,sy-12*k]],'#a6d0b0',2*k);ellipse(sx-3,sy-14*k,10*k,8*k,'#376a63');ellipse(sx+5,sy-17*k,8*k,7*k,'#6dc29b');ellipse(sx-5,sy-19*k,5*k,4*k,'#9fddae')}
+
+function car(x,y,axis=0,col='#edb87b'){const [sx,sy]=P(x,y);ctx.save();ctx.translate(sx,sy);ctx.rotate(axis?-.44:.44);ctx.shadowColor='#0b101d';ctx.shadowBlur=3;ctx.fillStyle='#1a3440';ctx.fillRect(-10,-5,20,10);ctx.fillStyle=col;ctx.fillRect(-9,-5,18,8);ctx.fillStyle='#d0faff';ctx.fillRect(-3,-5,6,8);ctx.restore()}
+
+function building(b,simple=false){const {x,y,w,d,h,base,i}=b;const ht=simple?0:h;
+
+ const basepoints=[[x,y],[x+w,y],[x+w,y+d],[x,y+d]].map(p=>P(...p));const tops=[[x,y],[x+w,y],[x+w,y+d],[x,y+d]].map(p=>P(...p,ht));
+
+ polygon(basepoints.map(p=>[p[0]+22,p[1]+10]),'#00152142');
+
+ if(!simple){polygon([tops[1],tops[2],basepoints[2],basepoints[1]],shade(base,-19),'#17374780',.7);
+
+ polygon([tops[2],tops[3],basepoints[3],basepoints[2]],shade(base,-36),'#17374780',.7);
+
+ const wall=(topA,topB,gndA,gndB,rows,cols,litColor)=>{
+
+  if(ht<40)return;for(let f=1;f<=rows;f++)for(let c=1;c<=cols;c++){
+
+   const u=(c-.5)/(cols+1), t=f/(rows+1);const ax=topA[0]+(topB[0]-topA[0])*u,ay=topA[1]+(topB[1]-topA[1])*u;
+
+   const gx=gndA[0]+(gndB[0]-gndA[0])*u,gy=gndA[1]+(gndB[1]-gndA[1])*u;
+
+   const px=ax+(gx-ax)*t,py=ay+(gy-ay)*t;
+
+   ctx.fillStyle=(i+f*4+c*7)%5===0?litColor:'#a9e9e64c';ctx.fillRect(px-1.6,py-1.8,Math.max(2,(topB[0]-topA[0])/cols*.28),3.5);
+
+  }
+
+ };
+
+ wall(tops[1],tops[2],basepoints[1],basepoints[2],Math.max(2,Math.floor(ht/20)),3,'#f8dca0');
+
+ wall(tops[3],tops[2],basepoints[3],basepoints[2],Math.max(2,Math.floor(ht/20)),3,'#fce9b3');}
+
+ polygon(tops,shade(base,25),shade(base,60),1.2);
+
+ // roof detailing for vivid architectural scale
+
+ if(!simple){let cx=(tops[0][0]+tops[2][0])/2,cy=(tops[0][1]+tops[2][1])/2;
+
+ if(i%3===0){ellipse(cx,cy,12,5,'#2a4d60');ellipse(cx,cy,7,3,'#77bac5')}
+
+ else if(i%3===1){polygon([[cx-11,cy-4],[cx+3,cy+2],[cx-1,cy+5],[cx-15,cy-1]],'#d9e6d7');line([[cx-11,cy-4],[cx-15,cy-8]],'#3c778b',1.3)}
+
+ else {ctx.strokeStyle='#efffffa3';ctx.lineWidth=1.3;ctx.strokeRect(cx-7,cy-4,14,8)}
+
+ // side edge and thin neon architectural outline
+
+ if(i%4===0)line([tops[2],basepoints[2]],'#a5deea85',1.5);
+
+ }
+
+ if(!simple)drawBuildingFlood(b,basepoints,tops);
+
+ }
+
+function landmarks(){const shrubs=[[80,120],[118,115],[265,118],[364,115],[515,120],[617,115],[800,118],[84,289],[270,290],[370,288],[524,296],[634,296],[803,286],[80,451],[264,450],[368,446],[522,451],[632,454],[800,462]];
+
+ shrubs.forEach((p,i)=>{tree(p[0],p[1],.65+(i%3)*.15)});
+
+ [[180,101,0,'#f4b873'],[435,75,1,'#eef2db'],[692,101,0,'#b4f2eb'],[165,448,1,'#d9aca2'],[442,464,0,'#ffffff'],[690,474,1,'#efdfad']].forEach(a=>car(...a));
+
+ }
+
+function city(){bg();ctx.save();ctx.shadowColor='#000a';ctx.shadowBlur=33;ellipse(655,581,370,42,'#010c1799');ctx.restore();drawGround();
+
+ // low rise trees behind streets
+
+ landmarks();
+
+ // depth sorting keeps isometric houses in the correct order
+
+ allBuildings.slice().sort((a,b)=>a.x+a.y-b.x-b.y).forEach(b=>building(b));
+
+ // waterfront fog shimmer
+
+ const flood=progress/100;
+
+ if(flood>0){ctx.globalCompositeOperation='screen';const g=ctx.createLinearGradient(250,335,1000,565);g.addColorStop(0,'#39cff900');g.addColorStop(.5,`rgba(59,183,205,${.04+flood*.11})`);g.addColorStop(1,'#39cff900');ctx.fillStyle=g;ellipse(635,456,310+flood*90,70+flood*18,g);ctx.globalCompositeOperation='source-over'}
+
+ // foreground rail on landscape
+
+ line([P(0,567),P(855,567)],'#93d7d289',2.5);
+
+ // crisp ambient particles
+
+ for(let i=0;i<20;i++){const x=125+(i*173%970),y=230+(i*83%340);ellipse(x,y,1.5,1.5,`rgba(174,233,226,${.12+.12*Math.sin(i+time/1200)})`)}
+
+ }
+
+function topMap(){bg();let g=ctx.createLinearGradient(180,105,1000,600);g.addColorStop(0,'#184658');g.addColorStop(1,'#103045');ctx.fillStyle=g;ctx.beginPath();ctx.roundRect(95,65,1010,500,25);ctx.fill();ctx.strokeStyle='#5ec9d54f';ctx.lineWidth=1.5;ctx.stroke();
+
+ ctx.save();ctx.beginPath();ctx.roundRect(95,65,1010,500,25);ctx.clip();
+
+ // map street grid and city block textures
+
+ for(let i=0;i<14;i++){const x=125+i*76;ctx.strokeStyle='#78a3a63a';ctx.lineWidth=i%4===0?26:13;ctx.beginPath();ctx.moveTo(x,64);ctx.lineTo(x-70,570);ctx.stroke();ctx.strokeStyle='#edd0a037';ctx.lineWidth=1.4;ctx.setLineDash([4,10]);ctx.stroke();ctx.setLineDash([])}
+
+ for(let i=0;i<9;i++){let y=85+i*62;ctx.strokeStyle='#85a9a73c';ctx.lineWidth=i%3===0?24:13;ctx.beginPath();ctx.moveTo(88,y);ctx.lineTo(1115,y-12);ctx.stroke()}
+
+ for(let i=0;i<92;i++){let x=138+(i*73%905),y=96+(i*109%434);let ww=22+(i*19%29),hh=11+(i*11%18);polygon([[x,y],[x+ww,y],[x+ww-4,y+hh],[x-4,y+hh]],i%5===0?'#5d878a':'#386276','#9dd6d329',.7);if(i%7===0)ellipse(x+ww/2,y+hh/2,8,5,'#89c0a17a')}
+
+ // organic canal and water spreads, traced rather than random flooding unrelated to waterways
+
+ const pts=[[62,225],[230,192],[402,302],[610,263],[806,377],[1120,315]];
+
+ ctx.beginPath();ctx.moveTo(...pts[0]);ctx.bezierCurveTo(...pts[1],...pts[2],...pts[3]);ctx.quadraticCurveTo(...pts[4],...pts[5]);ctx.strokeStyle='#063e58';ctx.lineWidth=62;ctx.stroke();ctx.strokeStyle='#1595b5';ctx.lineWidth=45;ctx.stroke();
+
+ const f=progress/100;ctx.strokeStyle=`rgba(26,176,207,${.18+f*.27})`;ctx.lineWidth=55+f*275;ctx.stroke();ctx.strokeStyle=`rgba(132,232,242,${.16+f*.15})`;ctx.lineWidth=45+f*230;ctx.stroke();
+
+ for(let i=0;i<40;i++){let x=120+(i*181%990),y=95+(i*59%465);if(i%6===0){ctx.fillStyle='#8bcda8';ctx.beginPath();ctx.arc(x,y,5,0,6.3);ctx.fill()}}
+
+ ctx.restore();
+
+ // edge and coordinate overlays
+
+ ctx.fillStyle='#071c2eb5';ctx.beginPath();ctx.roundRect(792,88,285,73,12);ctx.fill();ctx.fillStyle='#d3eef5';ctx.font='700 13px sans-serif';ctx.fillText('PETA SKEMATIS PERKOTAAN',812,115);ctx.fillStyle='#a1c4d1';ctx.font='12px sans-serif';ctx.fillText('Bukan bentuk geografis Jakarta',812,137);
+
+ for(const [x,y,c] of [[220,210,'#a3cabc'],[380,410,'#75c6cd'],[760,235,'#b1bf9d'],[980,450,'#f0c9a2']]){ctx.beginPath();ctx.arc(x,y,5,0,7);ctx.fillStyle=c;ctx.fill();ctx.strokeStyle='#e2fbff';ctx.lineWidth=2;ctx.stroke()}
+
+ }
+
+function rainfall(){if(rain<10)return;ctx.save();const n=Math.floor(rain/3);ctx.strokeStyle=`rgba(170,225,241,${.05+rain/1400})`;ctx.lineWidth=1.2;for(let i=0;i<n;i++){let x=(i*179+time*.06*(.65+i%3))%1330-60,y=(i*131+time*.18*(.7+i%4*.08))%750-90;line([[x,y],[x-13,y+26]],`rgba(178,232,244,${.07+rain/1250})`,1.1)}ctx.restore()}
+
+function render(){ctx.clearRect(0,0,W,H);(mode==='city'?city:topMap)();rainfall();}
+
+function update(){let v=Math.round(progress);el.value.innerHTML=v+'<span style="font-size:.55em;color:#a7e3e8">%</span>';el.pct.textContent=v+'%';el.bar.style.width=v+'%';valInput.value=v;valInput.style.setProperty('--pos',v+'%');el.phase.textContent=v<12?'Kondisi awal':v<32?'Genangan mulai meluas':v<60?'Air memasuki kawasan':v<85?'Genangan semakin luas':'Tahap puncak ilustrasi';el.rain.textContent=['Tidak hujan','Ringan','Sedang','Lebat','Sangat lebat'][Math.round(rain/25)];rainInput.style.setProperty('--pos',rain+'%');el.play.textContent=playing?'Ⅱ  Pause':progress>=100?'↻  Ulangi':'▶  Play';render()}
+
+function setMode(next){mode=next;document.querySelector('#cityBtn').classList.toggle('active',mode==='city');document.querySelector('#mapBtn').classList.toggle('active',mode==='map');document.querySelector('#cityBtn').setAttribute('aria-selected',String(mode==='city'));document.querySelector('#mapBtn').setAttribute('aria-selected',String(mode==='map'));el.mode.textContent=mode==='city'?'ISOMETRIC CITY / ARTISTIC VISUALIZATION':'SCHEMATIC MAP / ARTISTIC VISUALIZATION';render()}
+
+document.querySelector('#cityBtn').onclick=()=>setMode('city');document.querySelector('#mapBtn').onclick=()=>setMode('map');
+
+valInput.oninput=e=>{progress=+e.target.value;playing=false;update()};rainInput.oninput=e=>{rain=+e.target.value;update()};depthInput.oninput=e=>{maxFloodDepth=+e.target.value;document.querySelector('#maxDepthLabel').textContent=maxFloodDepth+' unit';depthInput.style.setProperty('--pos',(maxFloodDepth-45)+'%');update()};document.querySelector('#play').onclick=()=>{if(progress>=100)progress=0;playing=!playing;update()};document.querySelector('#reset').onclick=()=>{playing=false;progress=0;rain=50;rainInput.value=50;update()};
+
+function loop(ts){let delta=Math.min(60,ts-(last||ts));last=ts;time=ts;if(playing){progress=Math.min(100,progress+delta*(.0037+rain*.000038));if(progress>=100)playing=false;update()}else if(rain>0){render()}requestAnimationFrame(loop)}
+
+// Fixed logical canvas dimensions; CSS scales to available width with no Leaflet or third-party layout dependencies.
+
+canvas.width=W;canvas.height=H;depthInput.style.setProperty('--pos',(maxFloodDepth-45)+'%');update();requestAnimationFrame(loop);
+
+function reportHeight(){
+
+  try { if(window.parent!==window) window.parent.postMessage({type:'JAKARTA_SIM_HEIGHT',height:document.documentElement.scrollHeight},window.location.origin); } catch (_) {}
+
+}
+
+window.addEventListener('load',reportHeight);
+
+window.addEventListener('resize',reportHeight);
+
+if('ResizeObserver' in window) new ResizeObserver(reportHeight).observe(document.querySelector('.shell'));
+
+reportHeight();
+
+})();
+
+</script>
+
+</body>
+
+</html>
